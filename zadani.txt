@@ -1,0 +1,119 @@
+Zombie Apocalypse (téma Grafické RPG)
+
+Autor: Marek Drozdík
+
+Naprogramujte engine pro grafické RPG
+
+Váš engine:
+
+- ze souboru nahraje definici světa (mapu, předměty, příšery, ...)
+- umožní vytvořit herní postavu (její atributy a schopnosti) a následnou hru
+- implementuje jednoduchý soubojový systém a inventář
+- umožňuje ukládat a načítat rozehrané hry
+
+Engine může fungovat jako real-time hra, či tahová hra.
+
+Kde lze využít polymorfismus? (doporučené)
+
+- Soubojové vlastnosti: postava, příšera, stroj (např. past, bomba,...)
+- Efekty akcí: souboje, události (pád ze stromu,...), přechod do jiné místnosti
+- Inventář: postava, batoh, toulec, kapsa
+- Uživatelské rozhraní: konzole, ncurses, SDL, OpenGL (různé varianty), ...
+
+Ukázky:
+
+- https://en.wikipedia.org/wiki/Hack_(video_game)
+- https://www.mobygames.com/game/heroes-of-might-and-magic
+- http://www.drd2.cz/
+- Dungeons & Dragons
+
+Zadanie hry Zombie Apocalypse
+
+Vytvoríme hru "Zombie Apocalypse". Hra spočíva v prežití, respektíve v zabití čo najviac zombíkov (hra počíta aktuálne skóre).
+Ak sa vytvára nová hra tak si hráč zvolí mapu, na ktorej chce hrať, ktorá sa načíta zo súboru, nastaví atribúty postavy (meno, životy, počet teleportov).
+Maximálne si vie rozložiť 10 bodov medzi životy a teleporty. Ak mal hru vopred uloženú, tak sa načíta rozohraná hra zo súboru.
+
+Príkazy aplikácie:
+- new vytvorí novú hru, nasleduje vytvorenie postavy,
+- load načíta hru zo súboru,
+- quit ukončí program.
+
+Po vytvorení postavy sa začína hra. Zo súboru sa načíta mapa.
+
+Mapa:
+
++--------- -+
+| >    B #  |
+|     #     |
+|         #+|
+|  G     ZZ |
+|    #  Z ##|
+|    #     +|
++-----------+
+
+Legenda:
+ > player
+ Z Zombie
+ G Gun
+ B Bomb
+ | Vertikal wall
+ - Horizontal wall
+ # Inside wall
+ + Zombie spawn
+
+Hráč sa vie pohybovať po mape príkazmi do konzole.
+Pohyb:
+- s dole,
+- a dolava,
+- w hore,
+- d doprava.
+
+Schopnosti:
+- p slúži na teleportovanie vpred, až do narazenia o hranu. (tj #, |, -) alebo o zombie spawn (tj +).
+
+V bludisku sa budú na náhodných políčkach zobrazovať zbrane (gun, bomb), ktoré
+si vie hráč vziať prídením na dané políčko, a tým si ich vie pridať do inventáru.
+
+Hráč má jednu aktívnu zbraň, tj zbraň, ktorú aktuálne používa, je označená <--.
+Aktívne zbrane si vie hráč meniť, na toto slúži príkaz:
+- e.
+
+
+Na následné použitie zbrane (vystrelenie, odpálenie bomby) slúži príkaz:
+- f.
+
+Ak je zombík a hráč na rovnakom políčku, tak sa hráčóvi uberá život, a zombík umiera. Hra končí keď má hráč nula životov
+alebo využitím príkazu q, ktorým sa ukončí aktuálny beh hry a užívatelovi sa ponúka možnosť na uloženie hry.
+
+Celú aplikáciu predstavuje trieda CApplication, ktorá sa stará o beh celej aplikácie. Obsahuje triedu CInterface, ktorá
+slúži na interakciu s užívateľom.
+
+V triede CApplication sa vytvára hra, buď vytvorením novej hry, alebo načítaním rozohranej hry zo súboru. Následne vytvára
+triedu CExecutor, v ktorej prebieha hlavný herný cyklus. Trieda CExecutor má v sebe uložené jednotlivé generátory  
+(CZombieGenerator a CItemGenerator), ktoré slúžia na spawnovanie itemov a zombíkov a akcie, ktoré sa majú vykonať pri ďaľšej iterácii hry.
+ Generátory slúžia na generovanie akcii, ktoré sa generujú nezávislo od vstupu od užívateľa. Takže z CActionGenerator dedia
+ aj zombíci, ktorý sa pri každej iterácii hry pohybujú. 
+
+Trieda CGame reprezentuje aktuálne hranú hru, čiže si drží v sebe triedy ako CMap, CPlayer, CItem a CZombie.
+
+Trieda CInventory reprezentuje inventár postavy, v ktorom sú uložené objekty triedy CItem, ktorými je napriklád CGun či CBomb.
+
+Polymorfizmus:
+
+Polymorfizmus využijeme v triede CActionGenerator, ktorá je abstraktnou triedou, z ktorej dedia generátory CItemGenerator
+ a CZombieGenerator. Polymorfnou metódou je GenerateNextActions(), ktorá v prípade CItemGenerator 
+ spawnuje itemy na náhodných miestach na mape. Zatiaľ čo v prípade CZombieGenerator spawnuje zombíkov zo ZombieSpawn.
+ Polymorfné volanie je v triede CExecutor, kde pri každej iterácií hry, sa spustia všetky generátory a vygenerované akcie
+ ukladajú do akcii, ktoré sa majú vykonať pri ďaľšej iterácií hry.
+
+Polymorfizmus využijeme aj v triede CItem, čo je abstraktná trieda, z ktorej dedia triedy CGun a CBomb. Tieto triedy sú 
+uložené v kontajneri v triede CInventory. CInventory si zároveň udržuje informáciu o aktívnej zbrani, čo je zbraň, ktorá
+ sa použije pri stlačení klávesy 'f'. Hráč si vie prehadzovať medzi svojími zbraňami, ktoré má v inventári klávesou 'e'.
+ Polymorfnou metódou je UseItem(), ktorá pri triede CGun vystrelí zo zbrane v smere, do ktorej je hráč otočený, a ak zasiahne
+ nejakého zombíka pred tým než zasiahne stenu, tak ho zabije. Pri triede CBomb, vybuchne bomba z aktuálnej pozície hráča
+ a zabije všetkých zombíkov, ktorý su od hráča vzdialený dve políčka (aj po diagonálach).
+ 
+ Ďalej polymorfné volanie využijeme pri generovaní akcíí pre pohyb zombíkov. Trieda CZombie je abstraktná trieda, ktorá
+ dedí jednak od CCharacter tak aj od triedy CActionGenerator.Z tejto triedy dedí CZombieWalker. Polymorfnou metódou je 
+ metóda GenerateNextActions(), ktorá je volaná v hlavnom game loope (v CExecutor) na každom zombíkovi, ktorý je uložený
+ v CGame. Program je navrhnutý týmto spôsobom, pre jednoduché pridávanie nových typov zombíkov.
