@@ -1,5 +1,5 @@
-#Zombie Apocalypse
-Simple command line game inspired by [Boxhead](https://www.y8.com/games/box_head_2play). Players are gaining scores by killing zombies. The player is losing health if he stands on the same block as some zombie.
+# Zombie Apocalypse
+Is a simple command line game inspired by [Boxhead](https://www.y8.com/games/box_head_2play). Players are gaining scores by killing zombies and losing health by standing on the same block as some zombies.
 ## Application commands
 - `new`  create a new game with a new character and a map,
 - `load` loads previously saved game,
